@@ -1,0 +1,51 @@
+version: 2.1
+jobs:
+  build-and-test:
+    docker:
+      - image: circleci/golang:1.14.11
+    working_directory: /go/src/github.com/magneticio/vamp-health-probe
+    environment:
+      GO111MODULE: "on"
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-pkg-cache
+      - run:
+          name: Run unit tests
+          command: make test
+      - save_cache:
+          key: v1-pkg-cache
+          paths:
+            - "/go/pkg"
+  push-tag:
+    docker:
+      - image: circleci/golang:1.14.11
+    working_directory: /go/src/github.com/magneticio/vamp-health-probe
+    steps:
+      - checkout
+      - run:
+          name: "Generate version"
+          command: |
+            wget https://github.com/magneticio/semver-shell/releases/download/v0.2.0/semver_version.sh
+            chmod u+x semver_version.sh
+            ./semver_version.sh -l go -f ./version/version.go -o none
+      - run: git config user.email "${GITHUB_EMAIL}"
+      - run: git config user.name "${CIRCLE_PROJECT_USERNAME}"
+      - run:
+          name: "Update version tag"
+          command: |
+            ./semver_version.sh
+
+workflows:
+  version: 2
+  main:
+    jobs:
+      - build-and-test
+      - push-tag:
+          requires:
+            - build-and-test
+          filters:
+            branches:
+              only:
+                - master
