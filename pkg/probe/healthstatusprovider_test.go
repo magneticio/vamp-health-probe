@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	probe "github.com/magneticio/vamp-health-probe"
+	"github.com/magneticio/vamp-health-probe/pkg/probe"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
